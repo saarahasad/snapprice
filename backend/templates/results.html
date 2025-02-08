@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Comparison Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .product-graph {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="product-table">
+            <h2>Product Comparison  Table</h2>
+            {{ products_table_html | safe }}
+        </div>
+        <div class="product-graph">
+            <h2>Price Comparison Graph</h2>
+            <img src="data:image/png;base64,{{ graph_url }}" alt="Graph comparing discounted prices" class="img-fluid">
+        </div>
+    </div>
+</body>
+</html>

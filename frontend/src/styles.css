@@ -1,0 +1,573 @@
+/* Global Layout */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background: #f4f4f4;
+  width: 100%; /* Ensure that the app container takes full width */
+}
+
+/* Sidebar Container (Holds Pincode & Product List) */
+.sidebar-container {
+  width: 300px; /* Fixed width */
+  height: 100vh; /* Full viewport height */
+  background: white;
+  color: white;
+  overflow-y: auto;
+  position: fixed; /* Make sidebar fixed to the left */
+}
+
+/* Content Container */
+.content-container {
+  margin-left: 280px; /* Offset for the sidebar */
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  background: white; /* Optional: Add background color for contrast */
+  height: 100vh; /* Full viewport height */
+  overflow-y: auto; /* Allows scrolling if content overflows */
+}
+
+/* Pincode Selector Styling */
+.pincode-selector {
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.pincode-selector h2 {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #f3f4f6;
+}
+
+.pincode-dropdown {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #9ca3af;
+  background: #f9fafb;
+  color: #16404d;
+  outline: none;
+  cursor: pointer;
+}
+
+.pincode-dropdown:hover {
+  border-color: #3b82f6;
+}
+
+/* Sidebar (Product List) */
+.sidebar {
+  flex: 1;
+}
+
+.sidebar h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar-item {
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+.sidebar-item:hover {
+  background: #16404d;
+  color: white;
+}
+
+.sidebar-item.active {
+  background: #16404d;
+  font-weight: bold;
+  color: white;
+}
+
+/* Main Details Container */
+.details-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #efefef;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+/* Tabs Styling (Primary Tabs: Table / Charts) */
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  margin: 0 5px;
+  border: none;
+  cursor: pointer;
+  background-color: #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  width: 50%;
+  transition: 0.3s;
+}
+
+.tabs button.active {
+  background-color: #16404d;
+  color: white;
+  font-weight: bold;
+}
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-family: "Arial", sans-serif;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* Slightly more prominent shadow */
+  border: 1px solid #e3e8f0; /* Light gray border for a soft look */
+}
+
+/* Header Styling */
+th {
+  background-color: #16404d; /* Soft Yellow */
+  color: white; /* Darker text for better contrast */
+  font-size: 15px; /* Slightly larger font for better readability */
+  font-weight: bold;
+  text-align: center;
+  padding: 16px;
+}
+
+/* Row Styling */
+.scraped-product-table  tr:nth-child(even) {
+  background-color: white; /* Soft Green */
+}
+
+.scraped-product-table  tr:nth-child(odd) {
+  background-color: #f1ebeb; /* Soft Yellow */
+}
+
+/* Second Column Styling */
+.scraped-product-table td:nth-child(2) {
+  font-weight: bold;
+}
+
+.scraped-product-table td {
+  color: #16404d; /* Darker gray for readability */
+  font-size: 17px; /* Slightly larger font size for better readability */
+  padding: 14px;
+  text-align: left;
+  line-height: 1.5; /* Increased line height for better readability */
+}
+
+/* Hover Effect for Rows */
+.scraped-product-table tr:hover {
+  background-color: #16404d; /* Soft dark blue on hover */
+}
+
+.scraped-product-table tr:hover td,
+.scraped-product-table tr:hover th {
+  color: white !important; /* Ensure text turns white */
+  font-weight: bold;
+}
+
+.package-size-table td {
+  vertical-align: top;
+  padding-bottom: 20px;
+  font-weight: 300;
+  line-height:150%;
+}
+
+
+
+/* Charts Container */
+.charts-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-radius: 10px;
+  height: 100%;
+}
+
+/* Nested Chart Tabs */
+.chart-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #ddd;
+  color: #16404d;
+}
+
+.chart-tabs button {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #16404d;
+  border-bottom: 2px solid transparent;
+}
+
+.chart-tabs button.active {
+  color: #16404d;
+  font-weight: bold;
+  border-bottom: 2px solid #16404d;
+}
+
+.chart-tabs button:hover {
+  color: #333;
+}
+
+/* Chart Content */
+.chart-content {
+  height: 100%;
+  width: 100%;
+  border-radius: 8px;
+  background-color: #efefef;
+  padding: 20px;
+}
+
+/* Individual Chart Styling */
+.chart {
+  width: 90%;
+  padding: 15px;
+  height: 100%;
+}
+
+/* Chart Descriptions */
+.chart-description {
+  background-color: #cdd4db;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  width: 100%;
+}
+
+.chart-description h4 {
+  color: #333;
+}
+
+.chart-description ul {
+  padding-left: 20px;
+}
+
+.chart-description li {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+/* Discount Box */
+.brand-discount-box {
+  margin: 15px;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar-container {
+    width: 100%;
+    height: auto;
+  }
+
+  .details-container {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .tabs button {
+    width: auto;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .chart-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .chart-tabs button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .chart {
+    width: 100%;
+  }
+}
+
+.product-header {
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.product-info {
+  font-size: 14px;
+}
+
+.product-info p {
+  margin: 2px 0;
+}
+
+.live-scrape-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 30px;
+  background-color: #dda853;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px;
+  color: black;
+}
+
+.live-scrape-container h3 {
+  width: 90%;
+}
+
+.live-scrape-container input {
+  width: 80%;
+  padding: 10px;
+  margin: 5px 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.live-scrape-container input:focus {
+  outline: none;
+  border-color: maroon;
+  box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
+}
+
+.live-scrape-container button {
+  width: 80%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: maroon;
+  color: white;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.live-scrape-container button:hover {
+  background-color: #16404d;
+}
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  font-family: "Arial", sans-serif;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-cell {
+  font-weight: bold;
+  color: #16404d; /* Darker text for readability */
+  width: 150px; /* Adjust width for consistency */
+}
+
+.data-cell {
+  font-size: 16px;
+  color: #16404d; /* Dark text for better contrast */
+  padding: 10px;
+  border-radius: 5px;
+  flex-grow: 1;
+}
+
+.data-cell h3 {
+  margin: 0;
+}
+
+.selector-form {
+  border: #a6cdc6 2px solid;
+  padding: 10px;
+  margin: 10px;
+  color: black;
+  background-color: #a6cdc6;
+  border-radius: 10px;
+}
+
+.product-selector {
+  height: 400px;
+  overflow-y: scroll;
+  list-style-type: none; /* Removes the bullets */
+  padding: 0; /* Removes default padding */
+  margin: 0; /* Removes default margin */
+}
+
+.live-selector-form {
+  border: #a6cdc6 2px solid;
+  padding: 10px;
+  margin: 10px;
+  color: black;
+  background-color: #a6cdc6;
+  border-radius: 10px;
+}
+
+.live-selector-form ul {
+  list-style-type: none; /* Removes the bullets */
+  padding: 0; /* Removes default padding */
+  margin: 0; /* Removes default margin */
+}
+.sidebar-title {
+  background-color: white;
+  padding: 10px;
+  color: black;
+  text-align: center;
+  margin-bottom: 0px;
+  margin-top: 0px;
+  font-size: 16px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Add this to your CSS file */
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3); /* Light grey background */
+  border-top: 4px solid #000; /* Black color for the spinner */
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-top: 20px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Styles for the button */
+button:disabled {
+  background-color: #ccc; /* Light grey background */
+  color: #666; /* Darker grey text */
+  cursor: not-allowed; /* Indicates that the button is inactive */
+  border: 1px solid #bbb; /* Optional: gives the button a light border */
+}
+
+button:disabled:hover {
+  background-color: #ccc; /* Keep background the same during hover */
+  cursor: not-allowed; /* Prevent any hover effect */
+}
+
+
+
+/* Global Styles for the LoginForm */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #a6cdc6;
+  width: 100%;
+}
+
+.login-form {
+  background-color: #16404d;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(254, 254, 254, 0.917);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-form h2 {
+  text-align: center;
+  font-size: 28px;
+  color: white;
+  margin-bottom: 20px;
+}
+
+/* Input Fields */
+.login-form .input-group {
+  margin-bottom: 20px;
+}
+
+.login-form label {
+  display: white;
+  font-size: 14px;
+  color: white;
+  margin-bottom: 15px;
+}
+
+.login-form input {
+  width: 90%;
+  padding: 12px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.login-form input:focus {
+  border-color: #16404d;
+}
+
+/* Button */
+.login-form button {
+  width: 100%;
+  padding: 12px;
+  background-color: rgb(184, 113, 0);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.login-form button:hover {
+  background-color: rgb(102, 64, 2);
+}
+
+/* Error Message */
+.login-form .error-message {
+  color: #ff4d4d;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}

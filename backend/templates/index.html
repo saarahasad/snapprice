@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Pricing Analysis</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .product-graph {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Product Pricing & Analysis</h2>
+
+        <!-- Dropdown to select products -->
+        <form method="POST">
+            <label for="products">Select Products:</label>
+            <select id="products" name="products" multiple class="form-control">
+                {% for category in product_categories %}
+                    <option value="{{ category }}" {% if category in selected_products %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary mt-2">Filter</button>
+        </form>
+
+        {% if error_message %}
+            <div class="alert alert-warning mt-3">{{ error_message }}</div>
+        {% else %}
+            <div class="product-table mt-4">
+                {{ products_table_html | safe }}
+            </div>
+
+            <div class="product-graph">
+                <h2>Price per kg Comparison</h2>
+                <img src="data:image/png;base64,{{ graph_url }}" class="img-fluid">
+            </div>
+
+            <div class="product-graph">
+                <h2>Price Distribution</h2>
+                <img src="data:image/png;base64,{{ dist_url }}" class="img-fluid">
+            </div>
+
+            <div class="product-graph">
+                <h2>Discount Analysis</h2>
+                <img src="data:image/png;base64,{{ discount_url }}" class="img-fluid">
+            </div>
+
+            <div class="product-graph">
+                <h2>Packet Size Distribution</h2>
+                <img src="data:image/png;base64,{{ packet_size_url }}" class="img-fluid">
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
