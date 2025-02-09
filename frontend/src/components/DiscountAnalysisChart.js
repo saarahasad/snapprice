@@ -173,7 +173,7 @@ const DiscountAnalysisChart = ({ productData }) => {
       <div
         className="chart"
         style={{
-          marginTop: "300px",
+          marginTop: "200px",
           height: `${Math.max(300, aboveAverageDiscounts.length * 60)}px`,
         }}
       >

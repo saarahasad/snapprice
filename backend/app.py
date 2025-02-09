@@ -13,6 +13,7 @@ from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import cast, String
 import bcrypt
+from sqlalchemy import text
 
 IST = pytz.timezone("Asia/Kolkata")
 
@@ -59,21 +60,31 @@ def get_scraped_data():
 def parse_quantity(quantity_text):
     """Extract numerical quantity and unit, converting all values to kg."""
     quantity_text = quantity_text.lower().strip()
-    numbers = re.findall(r'\d+', quantity_text)  # Extract numbers
     
-    if not numbers:
+    # Extract all number and unit pairs
+    matches = re.findall(r'(\d+)\s*(kg|g)?', quantity_text)
+    
+    if not matches:
         return None, None
-
+    
     total_quantity = 0.0
-
-    if "kg" in quantity_text:
-        total_quantity += float(numbers[0])  
-    elif "g" in quantity_text:
-        total_quantity += float(numbers[0]) / 1000  
-
-    if "kg" in quantity_text and "g" in quantity_text and len(numbers) > 1:
-        total_quantity += float(numbers[1]) / 1000 
-
+    quantities = []
+    
+    for num, unit in matches:
+        value = float(num)
+        if unit == "kg" or ("kg" in quantity_text and not unit):
+            quantities.append(value)
+        elif unit == "g" or ("g" in quantity_text and not unit):
+            quantities.append(value / 1000)
+    
+    # Handle multiplication expressions like "200 g x 2" or "2 kg x 2"
+    multipliers = re.findall(r'\bx\s*(\d+)\b', quantity_text)
+    if multipliers:
+        multiplier = int(multipliers[-1])  # Take the last found multiplier
+        total_quantity = sum(quantities) * multiplier
+    else:
+        total_quantity = sum(quantities)
+    
     return total_quantity, "kg" if total_quantity else None
 
 @app.route('/pincodes', methods=['GET'])
@@ -321,7 +332,7 @@ async def set_location_zepto(page, pincode):
     await asyncio.sleep(2)  #  Wait to ensure location is set
     print(f"✅ Zepto location set for pincode: {pincode}")
 
-async def scrape_blinkit(page, product, pincode, synonyms_dict, blacklist_terms, scrape_timestamp,new_product_id):
+async def scrape_blinkit(page, product, pincode, synonyms_dict, blacklist_terms, scrape_timestamp,new_product_id,category):
     """Scrape Blinkit for the given product and pincode and store it in the database."""
     results = []
     search_url = f"https://blinkit.com/s/?q={product.replace(' ', '%20')}"
@@ -393,7 +404,7 @@ async def scrape_blinkit(page, product, pincode, synonyms_dict, blacklist_terms,
                         "discount_percent": discount_percent,
                         "price_per_kg":price_per_kg,
                         "product": product,
-                        "product_category":product,
+                        "product_category":category,
                         "scraped_at":scrape_timestamp,
                         "unit":unit,
                         "product_id":new_product_id
@@ -413,7 +424,7 @@ async def scrape_blinkit(page, product, pincode, synonyms_dict, blacklist_terms,
         print(f"❌ Error scraping Blinkit {product} for {pincode}: {e}")
         return []
 
-async def scrape_zepto(page, product, pincode, synonyms_dict,blacklist_terms, scrape_timestamp,new_product_id):
+async def scrape_zepto(page, product, pincode, synonyms_dict,blacklist_terms, scrape_timestamp,new_product_id,category):
     """Scrape Zepto for the given product and pincode and store it in the database."""
     try:
         # Navigate to Zepto search page
@@ -516,7 +527,7 @@ async def scrape_zepto(page, product, pincode, synonyms_dict,blacklist_terms, sc
                         "discount_percent": discount_percent,
                         "price_per_kg":price_per_kg,
                         "product": product,
-                        "product_category":product,
+                        "product_category":category,
                         "scraped_at":scrape_timestamp,
                         "unit":unit,
                         "product_id":new_product_id
@@ -534,7 +545,7 @@ async def scrape_zepto(page, product, pincode, synonyms_dict,blacklist_terms, sc
         print(f"❌ Error scraping Zepto {product} for {pincode}: {e}")
         return []
 
-async def scrape_swiggy(page, product, pincode, synonyms_dict,blacklist_terms, scrape_timestamp,new_product_id):
+async def scrape_swiggy(page, product, pincode, synonyms_dict,blacklist_terms, scrape_timestamp,new_product_id,category):
     """Scrape Swiggy Instamart for the given product and pincode and store it in the database."""
     results = []
 
@@ -654,7 +665,7 @@ async def scrape_swiggy(page, product, pincode, synonyms_dict,blacklist_terms, s
                         "discount_percent": discount_percent,
                         "price_per_kg":price_per_kg,
                         "product": product,
-                        "product_category":product,
+                        "product_category":category,
                         "scraped_at":scrape_timestamp,
                         "unit":unit,
                         "product_id":new_product_id
@@ -681,7 +692,7 @@ async def scrape_swiggy(page, product, pincode, synonyms_dict,blacklist_terms, s
         print(f"❌ Error scraping Swiggy Instamart '{product}' for {pincode}: {e}")
         return []
 
-async def scrape_all(product, pincode, synonyms_dict, blacklist_terms):
+async def scrape_all(product, pincode, synonyms_dict, blacklist_terms,category):
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
         scrape_timestamp = datetime.now(IST)
@@ -708,28 +719,103 @@ async def scrape_all(product, pincode, synonyms_dict, blacklist_terms):
                     name=product,
                     synonyms=synonyms_dict,
                     pincode=pincode,
-                    scraped_at=scrape_timestamp
+                    scraped_at=scrape_timestamp,
+                    category=category
                 )
                 
                 # Add to the session and commit the changes
         db.session.add(product_entry)
         db.session.commit()
 
+    
+
         # Run scraping in parallel
         results = []
 
-        blinkit_result = await scrape_blinkit(page_blinkit, product, pincode, synonyms_dict, blacklist_terms,scrape_timestamp,new_product_id)
+        blinkit_result = await scrape_blinkit(page_blinkit, product, pincode, synonyms_dict, blacklist_terms,scrape_timestamp,new_product_id,category)
         results.extend(blinkit_result)
 
         #print(results)
 
-        zepto_result = await scrape_zepto(page_zepto, product, pincode, synonyms_dict, blacklist_terms,scrape_timestamp,new_product_id)
+        zepto_result = await scrape_zepto(page_zepto, product, pincode, synonyms_dict, blacklist_terms,scrape_timestamp,new_product_id,category)
         results.extend(zepto_result)
         #print(results)
 
-        swiggy_result = await scrape_swiggy(page_swiggy, product, pincode, synonyms_dict, blacklist_terms,scrape_timestamp,new_product_id)
+        swiggy_result = await scrape_swiggy(page_swiggy, product, pincode, synonyms_dict, blacklist_terms,scrape_timestamp,new_product_id,category)
         results.extend(swiggy_result)
 
+        db.session.execute(text("""
+            UPDATE live_scraped_products
+            SET
+                swiggy_product_count = (
+                    SELECT COUNT(*)
+                    FROM scraped_data sd
+                    WHERE sd.platform_id = (SELECT id FROM platforms WHERE name = 'Swiggy')
+                    AND CAST(sd.product_id AS VARCHAR) = CAST(live_scraped_products.id AS VARCHAR)
+                    AND sd.scraped_at = (
+                        SELECT MAX(scraped_at)
+                        FROM scraped_data
+                        WHERE product_id = sd.product_id
+                    )
+                    AND sd.pincode = (
+                        SELECT pincode
+                        FROM scraped_data
+                        WHERE product_id = sd.product_id
+                        AND scraped_at = (
+                            SELECT MAX(scraped_at)
+                            FROM scraped_data
+                            WHERE product_id = sd.product_id
+                        )
+                        LIMIT 1
+                    )
+                ),
+                blinkit_product_count = (
+                    SELECT COUNT(*)
+                    FROM scraped_data sd
+                    WHERE sd.platform_id = (SELECT id FROM platforms WHERE name = 'Blinkit')
+                    AND CAST(sd.product_id AS VARCHAR) = CAST(live_scraped_products.id AS VARCHAR)
+                    AND sd.scraped_at = (
+                        SELECT MAX(scraped_at)
+                        FROM scraped_data
+                        WHERE product_id = sd.product_id
+                    )
+                    AND sd.pincode = (
+                        SELECT pincode
+                        FROM scraped_data
+                        WHERE product_id = sd.product_id
+                        AND scraped_at = (
+                            SELECT MAX(scraped_at)
+                            FROM scraped_data
+                            WHERE product_id = sd.product_id
+                        )
+                        LIMIT 1
+                    )
+                ),
+                zepto_product_count = (
+                    SELECT COUNT(*)
+                    FROM scraped_data sd
+                    WHERE sd.platform_id = (SELECT id FROM platforms WHERE name = 'Zepto')
+                    AND CAST(sd.product_id AS VARCHAR) = CAST(live_scraped_products.id AS VARCHAR)
+                    AND sd.scraped_at = (
+                        SELECT MAX(scraped_at)
+                        FROM scraped_data
+                        WHERE product_id = sd.product_id
+                    )
+                    AND sd.pincode = (
+                        SELECT pincode
+                        FROM scraped_data
+                        WHERE product_id = sd.product_id
+                        AND scraped_at = (
+                            SELECT MAX(scraped_at)
+                            FROM scraped_data
+                            WHERE product_id = sd.product_id
+                        )
+                        LIMIT 1
+                    )
+                )
+        """))
+
+        db.session.commit()
 
         # Close browser properly
         await browser.close()
@@ -741,10 +827,11 @@ def scrape():
     data = request.json
     product = data.get("product")
     pincode = data.get("pincode")
+    category = data.get("category")
     synonyms_dict = data.get("synonyms", {})
     blacklist_terms = data.get("blacklist_terms", [])
-
-    final_results = asyncio.run(scrape_all(product, pincode, synonyms_dict, blacklist_terms))
+    
+    final_results = asyncio.run(scrape_all(product, pincode, synonyms_dict, blacklist_terms,category))
     #print(final_results)
     return jsonify(final_results)
 

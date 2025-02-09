@@ -1,10 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const LoginForm = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      onLoginSuccess(storedUsername);
+    }
+  }, [onLoginSuccess]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,27 +24,21 @@ const LoginForm = ({ onLoginSuccess }) => {
       });
 
       if (response.status === 200) {
-        onLoginSuccess(response.data.username); // Pass username back to parent component
+        localStorage.setItem("username", response.data.username); // Store login info
+        onLoginSuccess(response.data.username);
       }
     } catch (err) {
-      // Log the entire error object to the console for debugging
       console.error("Login error:", err);
-
-      // Check if the error has a response (i.e., if it is an HTTP error)
-      if (err.response) {
-        console.error("Error response:", err.response);  // Log the response object
-        setError(err.response.data.error);  // Display the error message from the server
-      } else {
-        // If the error doesn't have a response, it could be network-related or another type of error
-        setError("An error occurred. Please try again.");
-      }
+      setError(
+        err.response?.data?.error || "An error occurred. Please try again."
+      );
     }
   };
 
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Login</h2>
+        <h2>SnapPrice</h2>
         <div className="input-group">
           <label htmlFor="username">Username</label>
           <input
