@@ -1,31 +1,33 @@
 /* Global Layout */
 .app-container {
-  display: flex;
-  height: 100vh;
-  background: #f4f4f4;
-  width: 100%; /* Ensure that the app container takes full width */
+  display: block;
+  min-height: 100vh;
+  background: #f3efe6;
+  width: 100%;
+  color: #1c2b2f;
 }
 
 /* Sidebar Container (Holds Pincode & Product List) */
 .sidebar-container {
-  width: 300px; /* Fixed width */
-  height: 100vh; /* Full viewport height */
-  background: white;
-  color: white;
+  width: 280px;
+  height: 100vh;
+  background: #14343c;
+  color: #f4efe6;
   overflow-y: auto;
-  position: fixed; /* Make sidebar fixed to the left */
+  position: fixed;
 }
 
 /* Content Container */
 .content-container {
-  margin-left: 280px; /* Offset for the sidebar */
-  padding: 20px;
-  width: 100%;
+  margin-left: 280px;
+  padding: 22px 32px 64px;
+  width: auto;
   box-sizing: border-box;
-  background: white; /* Optional: Add background color for contrast */
-  height: 100vh; /* Full viewport height */
-  overflow-y: auto; /* Allows scrolling if content overflows */
+  background: #f3efe6;
+  height: 100vh;
+  overflow-y: auto;
 }
+
 
 /* Pincode Selector Styling */
 .pincode-selector {
@@ -92,12 +94,12 @@
 /* Main Details Container */
 .details-container {
   flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background: #efefef;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  height: 100%;
+  padding: 8px 0 20px;
+  overflow: visible;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  height: auto;
 }
 
 /* Tabs Styling (Primary Tabs: Table / Charts) */
@@ -126,8 +128,7 @@
 }
 
 /* Table Styling */
-table {
-  width: 100%;
+.scraped-product-table {
   border-collapse: collapse;
   margin-bottom: 20px;
   font-family: "Arial", sans-serif;
@@ -147,11 +148,11 @@ th {
 }
 
 /* Row Styling */
-.scraped-product-table  tr:nth-child(even) {
+.scraped-product-table tr:nth-child(even) {
   background-color: white; /* Soft Green */
 }
 
-.scraped-product-table  tr:nth-child(odd) {
+.scraped-product-table tr:nth-child(odd) {
   background-color: #f1ebeb; /* Soft Yellow */
 }
 
@@ -170,23 +171,19 @@ th {
 
 /* Hover Effect for Rows */
 .scraped-product-table tr:hover {
-  background-color: #16404d; /* Soft dark blue on hover */
+  background-color: #f3e6cf;
 }
 
-.scraped-product-table tr:hover td,
-.scraped-product-table tr:hover th {
-  color: white !important; /* Ensure text turns white */
-  font-weight: bold;
+.scraped-product-table tr:hover td {
+  color: #14343c;
 }
 
 .package-size-table td {
   vertical-align: top;
   padding-bottom: 20px;
   font-weight: 300;
-  line-height:150%;
+  line-height: 150%;
 }
-
-
 
 /* Charts Container */
 .charts-container {
@@ -194,6 +191,7 @@ th {
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  margin: 10px;
   border-radius: 10px;
   height: 100%;
 }
@@ -276,50 +274,6 @@ th {
   font-size: 14px;
 }
 
-/* Responsive Design */
-@media screen and (max-width: 768px) {
-  .app-container {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .sidebar-container {
-    width: 100%;
-    height: auto;
-  }
-
-  .details-container {
-    width: 100%;
-    padding: 10px;
-  }
-
-  .tabs {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .tabs button {
-    width: auto;
-    padding: 8px;
-    font-size: 14px;
-  }
-
-  .chart-tabs {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .chart-tabs button {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-
-  .chart {
-    width: 100%;
-  }
-}
 
 .product-header {
   justify-content: space-between;
@@ -397,7 +351,7 @@ th {
   align-items: center;
 }
 
-.header-cell {
+.header-cel l {
   font-weight: bold;
   color: #16404d; /* Darker text for readability */
   width: 150px; /* Adjust width for consistency */
@@ -491,8 +445,6 @@ button:disabled:hover {
   cursor: not-allowed; /* Prevent any hover effect */
 }
 
-
-
 /* Global Styles for the LoginForm */
 .login-container {
   display: flex;
@@ -510,6 +462,7 @@ button:disabled:hover {
   box-shadow: 0 4px 8px rgba(254, 254, 254, 0.917);
   width: 100%;
   max-width: 400px;
+  margin: 10px!important;
 }
 
 .login-form h2 {
@@ -605,8 +558,8 @@ select:focus {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 10px;
-  background: #ddd;
+  padding: 0 0 8px;
+  background: transparent;
 }
 
 .username {
@@ -625,4 +578,538 @@ select:focus {
 
 .logout-btn:hover {
   background-color: #16404d;
+}
+
+
+
+/* Mobile view adjustments */
+@media (max-width: 768px) {
+  /* Change flex-direction to column for mobile screens */
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  /* Sidebar adjustments */
+  .sidebar-container {
+    width: 100%;
+    height: auto;
+    position: relative;
+    order: 2;
+  }
+
+  /* Content container adjustments */
+  .content-container {
+    margin-left: 0;
+    order: 1;
+    height: auto;
+    padding: 16px;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  /* Adjustments for the login form for better readability */
+  .login-form-container {
+    width: 100%;
+    padding: 20px;
+  }
+
+  /* Reduce sidebar width */
+  .sidebar-container {
+    width: 100%; /* Full width */
+  }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar-container {
+    width: 100%;
+    height: auto;
+    position: relative;
+    order: 2;
+  }
+
+  .content-container {
+    order: 1;
+    height: auto;
+  }
+
+  .details-container {
+    width: 100%;
+    max-width: 100vw;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* Scrollable wrapper for the table */
+  .scraped-product-table-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Enables horizontal scrolling */
+    display: block;
+  }
+
+  /* Ensure the table stays aligned and fits inside the wrapper */
+  .scraped-product-table {
+    width: 100%;
+    min-width: 800px; /* Ensures horizontal scrolling */
+    border-collapse: collapse;
+  }
+
+  /* Fix column width to match header and body */
+  .scraped-product-table thead,
+  .scraped-product-table tbody,
+  .scraped-product-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed; /* Ensures consistent column widths */
+  }
+
+  /* Allow text to wrap instead of overlapping */
+  .scraped-product-table th,
+  .scraped-product-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+    white-space: normal; /* Allows text wrapping */
+    word-wrap: break-word; /* Ensures long words break correctly */
+  }
+
+  /* Ensure images do not shrink */
+  .scraped-product-table img {
+    max-width: 50px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+
+  .tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .tabs button {
+    width: auto;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .chart-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .chart-tabs button {
+    padding: 12px 12px;
+    font-size: 12px;
+  }
+
+  .chart {
+    width: 100%;
+    padding: 0px;
+  }
+  .chart-content {
+    padding: 0px;
+  }
+
+  .chart-description {
+    font-size: 12px;
+    line-height: 0.7cm;
+    width: 100%;
+    padding: 10px;
+  }
+
+  .charts-container {
+    padding: 5px;
+  }
+}
+
+
+@media screen and (max-width: 768px) {
+  .package-size-table-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Enables horizontal scrolling */
+    display: block;
+  }
+
+  .package-size-table {
+    width: max-content; /* Ensures the table takes only required width */
+    min-width: 600px; /* Prevents excessive shrinking */
+    border-collapse: collapse;
+    white-space: nowrap; /* Prevents text wrapping inside cells */
+  }
+
+}
+
+.rail-brand {
+  padding: 22px 18px 6px;
+}
+
+.rail-brand h1 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: #f7f1e6;
+}
+
+.rail-kicker,
+.desk-kicker {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d7b07a;
+}
+
+.market-search {
+  margin-bottom: 22px;
+}
+
+.desk-header h2 {
+  margin: 4px 0 0;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  color: #14343c;
+}
+
+.desk-lead {
+  max-width: 680px;
+  margin: 10px 0 0;
+  line-height: 1.45;
+  color: #3d4f54;
+}
+
+.family-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.family-card,
+.flavor-card,
+.scrape-btn,
+.flavor-chip,
+.text-btn,
+.mix-toggle {
+  font-family: inherit;
+}
+
+.family-card {
+  text-align: left;
+  background: #fffdf8;
+  border: 1px solid #e4dccb;
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+}
+
+.family-card.active {
+  border-color: #14343c;
+  box-shadow: inset 0 0 0 1px #14343c;
+}
+
+.family-name {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #14343c;
+}
+
+.family-alias {
+  display: block;
+  margin-top: 4px;
+  color: #6d5b45;
+  font-size: 13px;
+}
+
+.search-panel {
+  margin-top: 12px;
+  background: #fffdf8;
+  border: 1px solid #e4dccb;
+  border-radius: 16px;
+  padding: 16px 18px 14px;
+}
+
+.search-guidance {
+  margin: 0 0 14px;
+  line-height: 1.5;
+  color: #24383d;
+}
+
+.search-fields {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.search-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6d5b45;
+}
+
+.search-fields input {
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid #d9d0c0;
+  font-size: 16px;
+  color: #14343c;
+  background: white;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.scrape-btn {
+  background: #14343c;
+  color: #f7f1e6;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.scrape-btn:hover {
+  background: #0f282e;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.chip-label,
+.chip-note,
+.scrape-status,
+.scrape-error,
+.empty-desk,
+.empty-filter {
+  font-size: 13px;
+  color: #5c5144;
+}
+
+.chip-note,
+.scrape-status {
+  margin: 8px 0 0;
+}
+
+.scrape-error {
+  color: #8d2d2d;
+  margin: 8px 0 0;
+}
+
+.flavor-chip,
+.text-btn,
+.mix-toggle {
+  border: 1px solid #d9d0c0;
+  background: #fff;
+  color: #14343c;
+  border-radius: 999px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.flavor-chip.active,
+.text-btn,
+.mix-toggle.active {
+  background: #14343c;
+  color: #f7f1e6;
+  border-color: #14343c;
+}
+
+.flavor-breakdown {
+  margin: 8px 0 18px;
+}
+
+.breakdown-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: end;
+}
+
+.breakdown-heading h3 {
+  margin: 0;
+  color: #14343c;
+}
+
+.breakdown-heading p,
+.mismatch-note {
+  margin: 4px 0 0;
+  color: #3d4f54;
+  line-height: 1.45;
+}
+
+.mismatch-note {
+  background: #f8e7c8;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.flavor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.flavor-card {
+  text-align: left;
+  background: #fffdf8;
+  border: 1px solid #e4dccb;
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  min-height: 148px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flavor-card.active {
+  border-color: #b56a12;
+  box-shadow: inset 0 0 0 1px #b56a12;
+}
+
+.flavor-card.empty {
+  background: transparent;
+  border-style: dashed;
+}
+
+.flavor-card-top,
+.platform-line,
+.price-range,
+.cheapest-line,
+.premium-line,
+.flavor-empty {
+  display: block;
+}
+
+.flavor-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.flavor-card-name {
+  font-weight: 700;
+  color: #14343c;
+}
+
+.flavor-card-count,
+.platform-line,
+.cheapest-line,
+.flavor-empty {
+  color: #6d5b45;
+  font-size: 12px;
+}
+
+.price-figure {
+  font-size: 28px;
+  letter-spacing: -0.04em;
+  color: #8a4e08;
+  line-height: 1.1;
+  margin-top: 8px;
+}
+
+.price-figure small {
+  font-size: 13px;
+  margin-left: 2px;
+  color: #6d5b45;
+}
+
+.price-range {
+  color: #14343c;
+  font-size: 13px;
+}
+
+.premium-line {
+  color: #8a4e08;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.cheapest-line {
+  line-height: 1.35;
+}
+
+.mix-toggle {
+  margin-top: 12px;
+}
+
+.flavor-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #efe4d2;
+  color: #14343c;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill-mix {
+  background: #e7e1d8;
+}
+
+.pill-salted,
+.pill-salt-pepper {
+  background: #f3d7a1;
+}
+
+.variety-line {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8a4e08;
+  font-weight: 600;
+}
+
+.scraped-product-table {
+  width: 100%;
+  background: #fffdf8;
+}
+
+.scraped-product-table td:nth-child(2) {
+  font-weight: 400;
+}
+
+.empty-desk,
+.empty-filter {
+  background: #fffdf8;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+@media (max-width: 900px) {
+  .family-grid,
+  .search-fields {
+    grid-template-columns: 1fr;
+  }
 }

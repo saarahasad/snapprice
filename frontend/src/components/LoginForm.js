@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 
 const LoginForm = ({ onLoginSuccess }) => {
@@ -6,61 +6,45 @@ const LoginForm = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
-      onLoginSuccess(storedUsername);
-    }
-  }, [onLoginSuccess]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:5000/login", {
-        username,
-        password,
-      });
-
+      const response = await axios.post("http://127.0.0.1:5001/login", { username, password });
       if (response.status === 200) {
-        localStorage.setItem("username", response.data.username); // Store login info
+        localStorage.setItem("username", response.data.username);
         onLoginSuccess(response.data.username);
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError(
-        err.response?.data?.error || "An error occurred. Please try again."
-      );
+      setError(err.response?.data?.error || "Those details were not accepted.");
     }
   };
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h2>SnapPrice</h2>
-        <div className="input-group">
-          <label htmlFor="username">Username</label>
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="input-group">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
-        {error && <p className="error-message">{error}</p>}
+    <div className="sp-login">
+      <section className="sp-login-copy">
+        <p className="sp-kicker">Pricebench</p>
+        <h1>Shelf prices, split by flavor.</h1>
+        <p>
+          Built for a nut or makhana brand that needs the plain price and the salted price kept apart, across Blinkit, Zepto, and Swiggy Instamart.
+        </p>
+        <ul>
+          <li>Median price per kilogram, so pack size does not disguise the rate.</li>
+          <li>Salt & pepper, peri peri, and plain each get their own number.</li>
+          <li>A file you can export and send to a buyer.</li>
+        </ul>
+      </section>
+      <form className="sp-login-card" onSubmit={handleSubmit}>
+        <h2>Sign in</h2>
+        <label>
+          Username
+          <input value={username} onChange={(event) => setUsername(event.target.value)} required />
+        </label>
+        <label>
+          Password
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+        </label>
+        <button type="submit">Enter the desk</button>
+        {error && <p className="sp-login-error">{error}</p>}
       </form>
     </div>
   );
