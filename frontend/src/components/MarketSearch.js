@@ -2,6 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FAMILIES } from "../classifyListing";
 
+import CollectorDownload from "./CollectorDownload";
+
+const COLLECTOR = "http://127.0.0.1:47123";
+const DESK = "http://127.0.0.1:5001";
+
 const MarketSearch = ({
   activeFamily,
   onFamily,
@@ -14,6 +19,7 @@ const MarketSearch = ({
   const [pincode, setPincode] = useState("560038");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [needsCollector, setNeedsCollector] = useState(false);
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -38,17 +44,20 @@ const MarketSearch = ({
 
     setLoading(true);
     setError("");
-    setNote("Stay on this page. Blinkit, Zepto, and Instamart are being read now. The prices will show up here in about a minute. You do not need to open another window.");
+    setNeedsCollector(false);
+    setNote("Stay on this page. Chrome on this computer is reading Blinkit, Zepto, and Instamart.");
     try {
-      const response = await axios.post("http://127.0.0.1:5001/scrape", {
+      await axios.get(`${COLLECTOR}/health`, { timeout: 800 });
+      const response = await axios.post(`${COLLECTOR}/scrape`, {
         pincode: pin,
         product,
         synonyms: family.synonyms,
         category: family.category,
-      });
+        desk: DESK,
+      }, { timeout: 300000 });
       const rows = Array.isArray(response.data) ? response.data : [];
       if (!rows.length || !rows[0].product_id) {
-        setError("Nothing came back. Search the base word — almonds, cashews, or makhana — so flavored and plain packs are both included.");
+        setError("Nothing came back. Try the product word again.");
         setNote("");
         return;
       }
@@ -56,7 +65,12 @@ const MarketSearch = ({
       onScraped(rows[0].product_id, pin);
     } catch (err) {
       console.error(err);
-      setError("The scrape did not finish. Check that the API on port 5001 is running, then try again.");
+      if (!err.response) {
+        setNeedsCollector(true);
+        setError("The collector is not running on this computer.");
+      } else {
+        setError(err.response?.data?.error || "The scrape did not finish.");
+      }
       setNote("");
     } finally {
       setLoading(false);
@@ -69,10 +83,10 @@ const MarketSearch = ({
       <header className="desk-header">
         <div>
           <p className="desk-kicker">Current market prices</p>
-          <h2>Find the nut, then split it by flavor</h2>
+          <h2>Compare a product</h2>
         </div>
         <p className="desk-lead">
-          Salt & pepper cashew is a different price from plain cashew. Peri peri makhana is a different price from plain makhana. Search the nut once, then read each flavor on its own.
+          Search any product once. The desk lines up the shelf price, the pack, and the app.
         </p>
       </header>
       )}
@@ -93,7 +107,7 @@ const MarketSearch = ({
 
       <div className="search-panel">
         <p className="search-guidance">
-          Only the word in this box is searched. The stores return every pack that uses it, plain and flavored. After the run, Flavors separates those prices. Nothing else on this form is sent.
+          Only the word in this box is searched. The stores return the packs that use it.
         </p>
 
         <div className="search-fields">
@@ -120,6 +134,7 @@ const MarketSearch = ({
         </div>
 
         {note && <p className="scrape-status">{note}</p>}
+        {needsCollector && <CollectorDownload />}
         {error && <p className="scrape-error">{error}</p>}
       </div>
     </section>

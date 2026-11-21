@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import CollectorDownload from "./CollectorDownload";
 
 const LoginForm = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
@@ -22,16 +23,17 @@ const LoginForm = ({ onLoginSuccess }) => {
   return (
     <div className="sp-login">
       <section className="sp-login-copy">
-        <p className="sp-kicker">Pricebench</p>
-        <h1>Shelf prices, split by flavor.</h1>
+        <p className="sp-kicker"><span className="sp-mark">P</span> Pricebench</p>
+        <h1>Compare shelf prices.</h1>
         <p>
-          Built for a nut or makhana brand that needs the plain price and the salted price kept apart, across Blinkit, Zepto, and Swiggy Instamart.
+          Any product on Blinkit, Zepto, and Instamart. See which app, brand, and pack is cheaper.
         </p>
         <ul>
-          <li>Median price per kilogram, so pack size does not disguise the rate.</li>
-          <li>Salt & pepper, peri peri, and plain each get their own number.</li>
-          <li>A file you can export and send to a buyer.</li>
+          <li>One rate per kilogram, so pack size does not hide the price.</li>
+          <li>The cheapest listing, the median, and the gap.</li>
+          <li>Export the comparison.</li>
         </ul>
+        <CollectorDownload />
       </section>
       <form className="sp-login-card" onSubmit={handleSubmit}>
         <h2>Sign in</h2>

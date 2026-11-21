@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify,request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -29,7 +30,10 @@ app = Flask(__name__)
 CORS(app)  # ✅ Enable CORS
 
 # ✅ Configure PostgreSQL (Update credentials)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://scraperuser:password@localhost/scraperdb"
+database_url = os.environ.get("DATABASE_URL", "postgresql://scraperuser:password@localhost/scraperdb")
+if database_url.startswith("postgres://"):
+    database_url = "postgresql://" + database_url[len("postgres://"):]
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ✅ Initialize database & migration
@@ -602,6 +606,61 @@ async def scrape_all(product, pincode, synonyms_dict, blacklist_terms, category,
             return results
         finally:
             await browser.close()
+
+
+@app.route("/ingest", methods=["POST"])
+def ingest():
+    """Save rows collected by the desktop collector. This machine does not open Chrome."""
+    data = request.get_json(silent=True) or {}
+    product = (data.get("product") or "").strip()
+    pincode = str(data.get("pincode") or "").strip()
+    if not product or not pincode:
+        return jsonify({"error": "Product and pincode are required."}), 400
+    category = data.get("category")
+    synonyms_dict = data.get("synonyms") or {}
+    blacklist_terms = data.get("blacklist_terms") or []
+    scrape_timestamp = datetime.now(IST)
+    new_product_id = LiveScrapedProduct.generate_custom_id()
+    db.session.add(LiveScrapedProduct(
+        id=new_product_id,
+        name=product,
+        synonyms=synonyms_dict,
+        pincode=pincode,
+        scraped_at=scrape_timestamp,
+        category=category,
+    ))
+    db.session.commit()
+    sites = {
+        "Blinkit": "https://blinkit.com/",
+        "Zepto": "https://www.zepto.com/",
+        "Swiggy": "https://www.swiggy.com/instamart",
+    }
+    results = []
+    for batch in data.get("batches") or []:
+        platform_name = batch.get("platform")
+        if platform_name not in sites:
+            continue
+        platform = Platform.query.filter_by(name=platform_name).first()
+        if platform is None:
+            platform = Platform(name=platform_name, website_url=sites[platform_name])
+            db.session.add(platform)
+            db.session.commit()
+        for item in batch.get("items") or []:
+            name = item.get("name") or ""
+            price = item.get("discounted_price")
+            if not name or not price:
+                continue
+            if not is_relevant_product(name, product, synonyms_dict, blacklist_terms):
+                continue
+            entry, row = _save_product(
+                platform, new_product_id, name, item.get("quantity"),
+                price, item.get("original_price"),
+                pincode, scrape_timestamp, item.get("image_url"), product, category,
+            )
+            db.session.add(entry)
+            results.append(row)
+    db.session.commit()
+    return jsonify(results)
 
 
 @app.route('/scrape', methods=['POST'])

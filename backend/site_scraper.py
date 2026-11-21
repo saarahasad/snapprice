@@ -412,11 +412,45 @@ async def _park_window(page):
         pass
 
 
+class InstamartPhoneWall(RuntimeError):
+    pass
+
+
+def _phone_wall(text):
+    text = (text or "").lower()
+    return "log in with phone" in text or "log in to continue" in text
+
+
+async def _body_text(page):
+    try:
+        return await page.locator("body").inner_text()
+    except Exception:
+        return ""
+
+
+async def _reload_past_phone_wall(page):
+    """Reloading the open URL clears the phone-number screen."""
+    reloaded = False
+    for _ in range(2):
+        if not _phone_wall(await _body_text(page)):
+            return reloaded
+        print("Instamart stopped on the phone number screen. Reloading this page.")
+        await page.reload(timeout=60000, wait_until="domcontentloaded")
+        await page.wait_for_timeout(1500)
+        reloaded = True
+    if _phone_wall(await _body_text(page)):
+        raise InstamartPhoneWall("Instamart stayed on the phone number screen after reload")
+    return reloaded
+
+
 async def _open_swiggy_area_search(page):
     """Open the area box. Instamart reloads once, so the dialog arrives a few seconds late."""
     box = page.locator("input[placeholder*='area'], input[placeholder*='street']")
     target = page.locator('[data-testid="search-location"]')
     for _ in range(24):
+        if _phone_wall(await _body_text(page)):
+            await _reload_past_phone_wall(page)
+            continue
         try:
             if await box.count() and await box.first.is_visible():
                 return box
@@ -427,6 +461,8 @@ async def _open_swiggy_area_search(page):
                     return box
                 except Exception:
                     pass
+        except InstamartPhoneWall:
+            raise
         except Exception:
             pass
         await page.wait_for_timeout(500)
@@ -434,38 +470,56 @@ async def _open_swiggy_area_search(page):
 
 
 async def set_location_swiggy(page, pincode):
-    await page.goto(
-        "https://www.swiggy.com/instamart",
-        timeout=60000,
-        wait_until="domcontentloaded",
-    )
-    box = await _open_swiggy_area_search(page)
-    await _park_window(page)
-    await box.first.fill(str(pincode))
-    suggestion = page.locator("div._11n32")
-    await suggestion.first.wait_for(state="visible", timeout=8000)
-    # The first row is the bare pincode and does not select a store.
-    picked = suggestion.first
-    for index in range(await suggestion.count()):
-        label = await suggestion.nth(index).inner_text()
-        if "," in label:
-            picked = suggestion.nth(index)
-            break
-    await picked.click(force=True)
-
-    confirm = page.get_by_role("button", name="Confirm Location")
-    await confirm.first.wait_for(state="visible", timeout=8000)
-    await confirm.first.click()
-
     pin = str(pincode)
-    for _ in range(12):
-        text = (await page.locator("body").inner_text()).lower()
-        if "log in with phone" in text or "log in to continue" in text:
-            raise RuntimeError("Instamart asked for a phone login before a store was selected")
-        if "delivery to" in text and pin in text:
-            print(f"Swiggy location set for pincode: {pincode}")
-            return
-        await page.wait_for_timeout(400)
+    for attempt in range(3):
+        await page.goto(
+            "https://www.swiggy.com/instamart",
+            timeout=60000,
+            wait_until="domcontentloaded",
+        )
+        await page.wait_for_timeout(800)
+        try:
+            await _reload_past_phone_wall(page)
+            text = (await _body_text(page)).lower()
+            if "delivery to" in text and pin in text:
+                print(f"Swiggy location set for pincode: {pincode}")
+                return
+            box = await _open_swiggy_area_search(page)
+            await _park_window(page)
+            await box.first.fill(pin)
+            suggestion = page.locator("div._11n32")
+            await suggestion.first.wait_for(state="visible", timeout=8000)
+            # The first row is the bare pincode and does not select a store.
+            picked = suggestion.first
+            for index in range(await suggestion.count()):
+                label = await suggestion.nth(index).inner_text()
+                if "," in label:
+                    picked = suggestion.nth(index)
+                    break
+            await picked.click(force=True)
+
+            confirm = page.get_by_role("button", name="Confirm Location")
+            await confirm.first.wait_for(state="visible", timeout=8000)
+            await confirm.first.click()
+
+            for _ in range(12):
+                text = (await _body_text(page)).lower()
+                if _phone_wall(text):
+                    await _reload_past_phone_wall(page)
+                    text = (await _body_text(page)).lower()
+                if "delivery to" in text and pin in text:
+                    print(f"Swiggy location set for pincode: {pincode}")
+                    return
+                await page.wait_for_timeout(400)
+        except InstamartPhoneWall:
+            if attempt == 2:
+                raise
+            continue
+        except TimeoutError:
+            if attempt == 2:
+                raise
+            print("Instamart location did not finish. Reloading and trying again.")
+            continue
     raise TimeoutError(f"Swiggy did not keep pincode {pincode}")
 
 
@@ -523,27 +577,45 @@ async def fetch_swiggy_products(page, query):
 
     page.on("response", on_response)
     try:
-        search = page.locator('button[data-testid="search-container"]')
-        if await search.count() == 0:
-            await page.goto(
-                "https://www.swiggy.com/instamart",
-                timeout=60000,
-                wait_until="domcontentloaded",
-            )
-            await page.wait_for_timeout(2000)
-        await search.first.click(force=True, timeout=10000)
-        box = page.locator('input[data-testid="search-page-header-search-bar-input"]')
-        await box.first.wait_for(state="visible", timeout=8000)
-        wall = (await page.locator("body").inner_text()).lower()
-        if "log in with phone" in wall or "log in to continue" in wall:
-            raise RuntimeError("Instamart showed the phone login instead of search results")
-        await page.wait_for_timeout(500)
-        await box.first.fill(query)
-        await box.first.press("Enter")
-        for _ in range(24):
+        for attempt in range(3):
+            captured.clear()
+            await _reload_past_phone_wall(page)
+            search = page.locator('button[data-testid="search-container"]')
+            if await search.count() == 0:
+                await page.goto(
+                    "https://www.swiggy.com/instamart",
+                    timeout=60000,
+                    wait_until="domcontentloaded",
+                )
+                await page.wait_for_timeout(2000)
+                await _reload_past_phone_wall(page)
+            try:
+                await search.first.click(force=True, timeout=10000)
+                box = page.locator('input[data-testid="search-page-header-search-bar-input"]')
+                await box.first.wait_for(state="visible", timeout=8000)
+            except InstamartPhoneWall:
+                raise
+            except Exception:
+                if attempt == 2:
+                    raise
+                print("Instamart search did not open. Reloading this page.")
+                await page.reload(timeout=60000, wait_until="domcontentloaded")
+                await page.wait_for_timeout(1500)
+                continue
+            if await _reload_past_phone_wall(page):
+                continue
+            await page.wait_for_timeout(500)
+            await box.first.fill(query)
+            await box.first.press("Enter")
+            for _ in range(24):
+                if captured:
+                    break
+                if _phone_wall(await _body_text(page)):
+                    await _reload_past_phone_wall(page)
+                    break
+                await asyncio.sleep(0.5)
             if captured:
                 break
-            await asyncio.sleep(0.5)
     finally:
         try:
             page.remove_listener("response", on_response)
