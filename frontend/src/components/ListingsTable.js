@@ -2,9 +2,25 @@ import { useMemo, useState } from "react";
 import { formatPercent, formatRupee } from "../classifyListing";
 import { benchmarkFromClassified, downloadListings, platformKey, priceTone } from "../marketMath";
 
+const NUMBER_COLUMNS = [
+  { key: "shelf", label: "Shelf price" },
+  { key: "mrp", label: "MRP" },
+  { key: "off", label: "Off" },
+  { key: "kg", label: "₹/kg" },
+];
+
+function numberValue(row, key) {
+  if (key === "shelf") return Number(row.item.discounted_price) || 0;
+  if (key === "mrp") return Number(row.item.original_price) || 0;
+  if (key === "off") return Number(row.item.discount_percent) || 0;
+  return row.pricePerKg || 0;
+}
+
 const ListingsTable = ({ classified, flavorFilter, onFocusFlavor, filename, liveMark }) => {
   const [query, setQuery] = useState("");
   const [platform, setPlatform] = useState("all");
+  const [sortKey, setSortKey] = useState("kg");
+  const [sortDir, setSortDir] = useState("asc");
 
   const flavors = useMemo(() => {
     const seen = [];
@@ -29,7 +45,34 @@ const ListingsTable = ({ classified, flavorFilter, onFocusFlavor, filename, live
       const haystack = `${row.item.product_name} ${row.item.platform}`.toLowerCase();
       return haystack.includes(query.trim().toLowerCase());
     })
-    .sort((a, b) => (a.pricePerKg || Infinity) - (b.pricePerKg || Infinity));
+    .sort((a, b) => {
+      const diff = numberValue(a, sortKey) - numberValue(b, sortKey);
+      return sortDir === "asc" ? diff : -diff;
+    });
+
+  const bestRows = new Set();
+  const cheapestByFlavor = {};
+  visible.forEach((row) => {
+    if (!(row.pricePerKg > 0)) return;
+    const current = cheapestByFlavor[row.flavorId];
+    if (!current || row.pricePerKg < current.pricePerKg) cheapestByFlavor[row.flavorId] = row;
+  });
+  Object.values(cheapestByFlavor).forEach((row) => bestRows.add(row));
+
+  const filtersOn = Boolean(query.trim()) || platform !== "all" || flavorFilter !== "all";
+  const resetFilters = () => {
+    setQuery("");
+    setPlatform("all");
+    onFocusFlavor("all");
+  };
+  const toggleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir(key === "off" ? "desc" : "asc");
+  };
 
   return (
     <div className="sp-stack">
@@ -80,11 +123,16 @@ const ListingsTable = ({ classified, flavorFilter, onFocusFlavor, filename, live
           onClick={() => downloadListings(visible, filename)}
           disabled={!visible.length}
         >
-          Export CSV
+          Export {visible.length} {visible.length === 1 ? "row" : "rows"}
         </button>
       </div>
 
-      <p className="sp-count">{visible.length} listings, cheapest per kilogram first</p>
+      <div className="sp-count-row">
+        <p className="sp-count">{visible.length} of {classified.length} listings</p>
+        {filtersOn && (
+          <button type="button" className="sp-reset" onClick={resetFilters}>Reset filters</button>
+        )}
+      </div>
 
       {visible.length === 0 ? (
         <p className="sp-empty">Nothing in this filter.</p>
@@ -93,35 +141,44 @@ const ListingsTable = ({ classified, flavorFilter, onFocusFlavor, filename, live
           <table className="sp-table sp-listings">
             <thead>
               <tr>
+                <th className="sp-thumb-col" aria-label="Photo" />
                 <th>Platform</th>
-                <th>Pack</th>
                 <th>Flavor</th>
                 <th>Product</th>
-                <th className="num">Shelf price</th>
-                <th className="num">MRP</th>
-                <th className="num">Off</th>
-                <th className="num">₹/kg</th>
+                <th>Pack size</th>
+                {NUMBER_COLUMNS.map((column) => (
+                  <th key={column.key} className="num">
+                    <button type="button" className="sp-sort" onClick={() => toggleSort(column.key)}>
+                      {column.label}
+                      {sortKey === column.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                    </button>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {visible.map((row, index) => (
                 <tr key={`${row.item.product_name}-${index}`}>
-                  <td><span className={`sp-plat-tag plat-${platformKey(row.item.platform).toLowerCase()}`}>{platformKey(row.item.platform)}</span></td>
                   <td>
                     <img
                       src={row.item.image_url || "/images/zeptologo.png"}
                       alt=""
                     />
                   </td>
+                  <td><span className={`sp-plat-tag plat-${platformKey(row.item.platform).toLowerCase()}`}>{platformKey(row.item.platform)}</span></td>
                   <td><span className={`sp-pill tone-${priceTone(row.pricePerKg, benchmark?.median, row.flavorId, benchmark?.id)}`}>{row.flavorLabel}</span></td>
                   <td>
                     {row.displayName || row.item.product_name}
                     {row.varieties.length > 0 && <span className="sp-variety">{row.varieties.join(" · ")}</span>}
                   </td>
+                  <td>{row.item.packaging_size}</td>
                   <td className="num">{formatRupee(row.item.discounted_price, 0)}</td>
                   <td className="num">{formatRupee(row.item.original_price, 0)}</td>
                   <td className="num">{formatPercent(row.item.discount_percent)}</td>
-                  <td className={`num tone-${priceTone(row.pricePerKg, benchmark?.median, row.flavorId, benchmark?.id)}`}>{row.pricePerKg ? formatRupee(row.pricePerKg) : "—"}</td>
+                  <td className={`num tone-${priceTone(row.pricePerKg, benchmark?.median, row.flavorId, benchmark?.id)}`}>
+                    {row.pricePerKg ? formatRupee(row.pricePerKg) : "—"}
+                    {bestRows.has(row) && <span className="sp-best">Best value</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -323,6 +323,7 @@ const App = () => {
               onRetry={retryPlatform}
               retrying={retrying}
               retryError={retryError}
+              onRefresh={() => setView("collect")}
               onOpenFlavor={(flavorId) => {
                 setFocusFlavor(flavorId);
                 setView("listings");
@@ -347,11 +348,12 @@ const App = () => {
                 report={report}
                 flavorFilter={focusFlavor}
                 onFocusFlavor={setFocusFlavor}
+                onOpenListings={(flavorId) => {
+                  setFocusFlavor(flavorId);
+                  setView("listings");
+                }}
                 familyMismatch={mismatch}
               />
-              <button type="button" className="sp-btn" onClick={() => setView("listings")}>
-                Open these listings
-              </button>
             </div>
           )}
           {historyReady && !loading && report && view === "listings" && (

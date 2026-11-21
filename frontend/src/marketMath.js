@@ -169,7 +169,7 @@ export function priceMovement(current, previous) {
     const bi = preferred.indexOf(b.id);
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
-  return rows.slice(0, 4);
+  return rows;
 }
 
 export function downloadListings(rows, filename) {

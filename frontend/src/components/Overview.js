@@ -2,7 +2,7 @@ import { FAMILIES, formatRupee, toTitleCase } from "../classifyListing";
 import { PLATFORMS, benchmarkGroup, buildBrief, formatStamp, platformKey, platformMatrix, priceMovement, priceTone } from "../marketMath";
 import FlavorChart from "./FlavorChart";
 
-const Overview = ({ report, run, previousReport, previousRun, onOpenFlavor, live, onRetry, retrying, retryError }) => {
+const Overview = ({ report, run, previousReport, previousRun, onOpenFlavor, onRefresh, live, onRetry, retrying, retryError }) => {
   const family = FAMILIES.find((entry) => entry.id === report.baseId);
   const title = family ? family.name : toTitleCase(run?.name || "Market");
   const brief = buildBrief(report);
@@ -93,35 +93,34 @@ const Overview = ({ report, run, previousReport, previousRun, onOpenFlavor, live
             <li><i className="tone-near" /> Close to the benchmark</li>
           </ul>
         </article>
-        <article className="sp-panel">
-          <div className="sp-panel-head">
-            <h3>Since the previous run</h3>
-            <p>
-              {previousRun
-                ? `${previousRun.name}, ${previousRun.pincode}, ${formatStamp(previousRun.scraped_at)}`
-                : "No earlier run of this product at this pincode."}
-            </p>
+        {movement.length === 0 ? (
+          <div className="sp-compare-strip">
+            <span>No earlier run of this product at this pincode.</span>
+            <button type="button" className="sp-btn sp-btn-ghost" onClick={onRefresh}>Refresh to compare</button>
           </div>
-          {movement.length === 0 ? (
-            <p className="sp-muted">A second run is what makes a price move visible. Refresh this product to start a comparison.</p>
-          ) : (
-            <ul className="sp-moves">
+        ) : (
+          <article className="sp-panel">
+            <div className="sp-panel-head">
+              <h3>Since the previous run</h3>
+              <p>{previousRun.name}, {previousRun.pincode}, {formatStamp(previousRun.scraped_at)}</p>
+            </div>
+            <div className="sp-deltas">
               {movement.map((move) => (
-                <li key={move.id}>
-                  <span>{move.label}</span>
-                  <strong className={move.direction}>
-                    {move.direction === "flat"
-                      ? "Unchanged"
-                      : `${move.direction === "up" ? "Up" : "Down"} ${Math.abs(Math.round(move.delta * 100))}%`}
-                  </strong>
-                  <em>
-                    {formatRupee(move.from)} → {formatRupee(move.to)} /kg
-                  </em>
-                </li>
+                <span
+                  key={move.id}
+                  className={`sp-delta ${move.direction}`}
+                  title={`${formatRupee(move.from)} → ${formatRupee(move.to)} /kg`}
+                >
+                  {move.direction === "down" ? "▼" : move.direction === "up" ? "▲" : "–"}
+                  {" "}
+                  {move.label}
+                  {" "}
+                  {Math.abs(Math.round(move.delta * 100))}%
+                </span>
               ))}
-            </ul>
-          )}
-        </article>
+            </div>
+          </article>
+        )}
       </section>
 
       <section className="sp-panel">
@@ -142,27 +141,39 @@ const Overview = ({ report, run, previousReport, previousRun, onOpenFlavor, live
               </tr>
             </thead>
             <tbody>
-              {matrix.map((row) => (
+              {matrix.map((row) => {
+                const priced = PLATFORMS.map((name) => row.cells[name].median).filter((value) => value > 0);
+                const low = priced.length ? Math.min(...priced) : null;
+                return (
                 <tr key={row.id}>
                   <td><span className={`sp-pill tone-${tone(row.median, row.id)}`}>{row.label}</span></td>
                   <td className="num">{row.count}</td>
-                  {PLATFORMS.map((name) => (
-                    <td key={name} className="num">
-                      {row.cells[name].median ? (
+                  {PLATFORMS.map((name) => {
+                    const cell = row.cells[name];
+                    const missingTitle = `No ${name} listing for ${row.label} in this run`;
+                    if (!cell.median) {
+                      return (
+                        <td key={name} className="num is-empty">
+                          <span className="sp-missing" title={missingTitle}>—</span>
+                        </td>
+                      );
+                    }
+                    const cheapest = cell.median === low;
+                    return (
+                      <td key={name} className={`num ${cheapest ? "is-cheapest" : ""}`}>
                         <div className={`sp-rate plat-${name.toLowerCase()}`}>
-                          <span>{formatRupee(row.cells[name].median)}</span>
+                          <span>{formatRupee(cell.median)}</span>
                           <span className="sp-cell-note">
-                            {row.cells[name].count} {row.cells[name].count === 1 ? "listing" : "listings"}
+                            {cell.count} {cell.count === 1 ? "listing" : "listings"}
                           </span>
                         </div>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  ))}
+                      </td>
+                    );
+                  })}
                   <td className="num">{formatRupee(row.median)}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
